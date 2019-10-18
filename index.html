@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        .payInput{ display: grid; grid-template-columns: repeat(3, 1fr); grid-gap: 10px; }
+        .payInput div{ padding: 20px; text-align: center; background:#eee;}
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="payArea">
+            <div class="payText">
+                <div id="amountArea" style="text-align: center; font-size:40px; margin: 1em 0;"></h2>
+            </div>
+            <div class="payInput">
+                <div class="btn">1</div>
+                <div class="btn">2</div>
+                <div class="btn">3</div>
+                <div class="btn">4</div>
+                <div class="btn">5</div>
+                <div class="btn">6</div>
+                <div class="btn">7</div>
+                <div class="btn">8</div>
+                <div class="btn">9</div>
+                <div class="btn">00</div>
+                <div class="btn">0</div>
+                <div class="btn"><</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/@reactivex/rxjs@5.3.0/dist/global/Rx.js"></script>
+
+    <script>
+        (function(){
+
+            // INITIAL AMOUNT
+            let amount = '0.00';
+
+            // OBSERVALBLE IS USED ONLY TO UPDATE CHANGES
+            const formObs = new Rx.BehaviorSubject(amount);
+
+            // WHERE TO UPDATE THE VALUE
+            const amountArea = document.getElementById('amountArea');
+            amountArea.innerHTML = formObs.value;
+        
+            // DETECT CHANGES TO OBSERVABLE
+            formObs.subscribe((formUpdate) => {
+                amountArea.innerHTML = formUpdate;
+            })
+
+            // GET ALL BUTTONS ON THE PAGE AND ADD CLICK EVENT LISTENER
+            const btn = document.getElementsByClassName('btn');
+            for(let i=0; i < btn.length; i++){
+                btn[i].addEventListener('click', build, false)
+            }
+
+
+            function build(){
+
+                // THIS GETS THE VALUE OF PRESSED BUTTON
+                let btnVal;
+                if(this.innerHTML === '00' || this.innerHTML === '0'){
+                    btnVal = this.innerHTML;
+                } else {
+                    btnVal = Number(this.innerHTML);
+                }
+
+                // GET THE CURRENT VALUE
+                const currAmount = (formObs.value).split(',').join('');
+
+                // EXECUTE A DELETE
+                if(!btnVal ){
+
+                    // ENSURE CURRENT AMOUNT IS NOT 0.00
+                    if(currAmount != '0.00'){
+                        
+                        // 1) REMOVE THE LAST CHARACTER OF THE AMOUNT
+                        const removeLastChar = currAmount.slice(0, -1);
+                        
+                        // 2) SPLIT THE removeLastChar INTO TWO AT DECIMAL LEVEL
+                        const aqa = removeLastChar.split('.');
+                        
+                        // 3) GET THE LAST CHARACTER OF THE FIRST IN ARRAY
+                        const getlastChar = (aqa[0])[((aqa[0]).length -1)];
+                        
+
+                        // 4) REMOVE THE LAST CHARACTER OF THE FIRST IN ARRAY
+                        const removelastChar = aqa[0].slice(0, -1);
+                        
+
+                        // 5) ASSEMBLE THE FULL STRING
+                        let assemble = 0 + removelastChar + '.' + getlastChar + aqa[1];
+                        
+
+                        // 6) ENSURE THAT THE FIRST VALUE OF STRING IS NOT ZERO
+                        let aba4 = sepNum(assemble);
+                        if(assemble[0] === '0' ){
+                            assemble = assemble.split('.');
+                            // CONVERT FIRST IN ARRAY TO NUMBER
+                            aba4 = sepNum(Number(assemble[0])) +'.'+ assemble[1];
+                        }
+
+
+                        // UPDATE THE VALUE OF NUMBER
+                        formObs.next(aba4);
+
+
+                    }
+
+                    return;
+                }
+                
+                
+                // CHECK THE LENGTH OF THE CURRENT AMOUNT
+                const amountLength = (currAmount.length)-1;
+
+                // ENSURE AMOUNT IS NOT 0.00 AND INPUT VALUE DOES NOT BEGIN WITH 0
+                if(currAmount === '0.00'  &&  btnVal[0] === '0'){
+                    return;
+                }
+
+                // APPEND THE CURRENT AMOUNT TO THE INPUT AMOUNT
+                const newamount =  currAmount + btnVal; 
+                // GET THE NEW LENGTH OF STRING
+                const newamountLength =  (newamount.length) - 1; 
+
+                // ENSURE INPUT IS STRING
+                if(typeof(btnVal) != 'string'){
+                    btnVal = String(btnVal);
+                }
+
+                // GET INPUT VALUE LENGTH
+                const btnValLength = btnVal.length;
+                
+                // DETERMINE THE POSITION TO SWITH
+                let switchvalPos;
+                if(btnValLength > 1){
+                    switchvalPos = (newamountLength-btnValLength);
+                } else{
+                    switchvalPos = (newamountLength-btnValLength) - 1;
+                }
+
+                // GET THE FIRST SECTION OF STRING
+                const aba = newamount.substr(0, switchvalPos+1);
+                // GET SECOND SECTION OF STRING
+                const abar = newamount.substr(switchvalPos+1,  newamountLength);
+
+                // REMOVE DOT FROM STRING
+                const aba2 = aba.replace('.', '');
+
+                // REASSEMBLE STRING
+                let aba3 = aba2 + '.' + abar;
+
+                // ENSURE THAT THE FIRST VALUE OF STRING IS NOT ZERO
+                let aba4 = sepNum(aba3);
+                if(aba3[0] === '0' ){
+                    aba3 = aba3.split('.');
+                    aba4 = sepNum(Number(aba3[0])) +'.'+ aba3[1];
+                }
+
+                // UPDATE THE VALUE OF NUMBER
+                formObs.next(aba4);
+               
+            }
+
+            function sepNum(r,e){return e=e||",",r=String(r).replace(/[\u0660-\u0669\u06f0-\u06f9]/g,function(r){return 15&r.charCodeAt(0)}).replace(/(?:[^\.]|^)\b(\d+)/g,function(r){return r=r.replace(/\B(?=(\d{3})+\b)/g,e)})}
+
+
+        })();
+    </script>    
+</body>
+</html>
